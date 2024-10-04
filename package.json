@@ -1,0 +1,23 @@
+{
+  "name": "prisoners_dilemma",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nashwanhabboosh/prisoners-dilemma.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nashwanhabboosh/prisoners-dilemma/issues"
+  },
+  "homepage": "https://github.com/nashwanhabboosh/prisoners-dilemma#readme",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
