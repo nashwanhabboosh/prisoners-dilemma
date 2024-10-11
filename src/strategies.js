@@ -5,6 +5,11 @@
 // the function must always return either a 1 or a 0, 0 indicating
 // cooperation, 1 indicating dissent
 
+// The format of the "history" input is 2 arrays with length equal
+// to the number of rounds completed so far. the first array is the
+// history of decisions made by this agent, the second array is the 
+// history of decisions made by the other agent
+
 // Generic strategy where the prisoner always cooperates regardless
 // of the actions of the other actor
 function passive(history) {
@@ -23,8 +28,25 @@ function random(history) {
     return Math.random() < 0.5 ? 0 : 1;
 }
 
+// Initially cooperates, the mirrors the most recent action
+// of the other player
+function tit_for_tat(history) {
+    if (history[0].length == 0) return 0;
+
+    return history[1][history[1].length-1];
+}
+
+// Initially dissents, the mirrors the most recent action
+// of the other player
+function suspicious_tit_for_tat(history) {
+    if (history[0].length == 0) return 1;
+
+    return history[1][history[1].length-1];
+}
+
 module.exports = {
     passive,
     aggressive,
     random,
+    tit_for_tat,
 };
