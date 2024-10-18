@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Menu</title>
+</head>
+<body>
+    <h1>Select a Function</h1>
+    
+    <!-- Form to select a function and provide input -->
+    <form action="/run-function" method="POST">
+        <label for="strategyName">Choose a function:</label>
+        <select name="strategyName" id="strategyName" required>
+            <% strategyNames.forEach(strategyName => { %>
+                <option value="<%= strategyName %>"><%= strategyName %></option>
+            <% }); %>
+        </select>
+
+        <label for="arg1">First argument:</label>
+        <input type="number" id="arg1" name="arg1" required>
+
+        <label for="arg2">Second argument:</label>
+        <input type="number" id="arg2" name="arg2" required>
+
+        <button type="submit">Run Function</button>
+    </form>
+</body>
+</html>

@@ -70,6 +70,10 @@ function simulation_analysis(rewards) {
     console.log("Player B: ", playerB_average_sentence);
 }
 
+function dummy(text) {
+    return "testing, input: " + text;
+}
+
 const params = {
     rounds: 10,
     reward_matrix: {
@@ -83,4 +87,5 @@ simulate([strategies.aggressive, strategies.tit_for_tat], params);
 
 module.exports = {
     simulate,
+    dummy,
 };
