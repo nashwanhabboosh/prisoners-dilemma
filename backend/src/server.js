@@ -1,9 +1,15 @@
 const express = require('express');
 const strategies = require('./simulate');
+const cors = require('cors');
 const { aggressive } = require('./strategies');
 
 const app = express();
 const port = 5000;
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  }));
 
 app.use(express.json());
 
