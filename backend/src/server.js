@@ -1,7 +1,7 @@
 const express = require('express');
-const strategies = require('./simulate');
+const simulate = require('./simulate');
 const cors = require('cors');
-const { aggressive } = require('./strategies');
+const { passive } = require('./strategies');
 
 const app = express();
 const port = 5000;
@@ -15,18 +15,14 @@ app.use(express.json());
 
 app.post('/api/passive', (req, res) => {
     const { history } = req.body;
-    const decision = "TEST";
-    res.json({ decision });
-  });
 
-// Route for root page
-app.get('/', (req, res) => {
-    res.send('Root page');
-});
-
-// Route for strategies page
-app.get('/strategies', (req, res) => {
-    res.send('This is the strategies page');
+    try {
+        const decision = passive(history);
+        res.json({ decision });
+    } catch (error) {
+        console.error('Passive algo throwing error: ', error);
+        res.status(500).json({ error: 'Error processing request' });
+    }
 });
 
 // Start server
