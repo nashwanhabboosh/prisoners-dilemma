@@ -40,11 +40,20 @@ function simulate(strategies, simulationParameters) {
     simulation_analysis(rewards);
 }
 
+function getStrategyByName(name) {
+    if (strategies[name]) {
+        return strategies[name];
+    } else {
+        console.error(`Strategy ${funcName} not found.`);
+        return null;
+    }
+}
+
 // Takes a list of strategies (as string names of the strategies)
 // And information about the population simulation and runs randomized
 // simulations between strategies within the population
 function population_simulation(strategies, simulationParameters) {
-    return 100;
+    return getStrategyByName(strategies[0])("test");
 }
 
 // 0 is cooperation, 1 is dissent
@@ -77,16 +86,18 @@ function simulation_analysis(rewards) {
     console.log("Player B: ", playerB_average_sentence);
 }
 
-const params = {
-    rounds: 10,
-    reward_matrix: {
-        cooperating: [1, 1],
-        betrayal: [0, 3],
-        dissenting: [2, 2],
-    },
-};
+// Example 1v1 simulation
+// 
+// const params = {
+//     rounds: 10,
+//     reward_matrix: {
+//         cooperating: [1, 1],
+//         betrayal: [0, 3],
+//         dissenting: [2, 2],
+//     },
+// };
 
-simulate([strategies.aggressive, strategies.tit_for_tat], params);
+// simulate([strategies.aggressive, strategies.tit_for_tat], params);
 
 module.exports = {
     simulate,
