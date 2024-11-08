@@ -1,5 +1,5 @@
 const express = require('express');
-const simulate = require('./simulate');
+const { simulate, population_simulation } = require('./simulate');
 const cors = require('cors');
 const { passive , aggressive} = require('./strategies');
 
@@ -28,6 +28,21 @@ const createRouteHandler = (strategyFunction) => {
 };
 
 app.post('/api/passive', createRouteHandler(passive));
+
+app.post('/api/simulate', async (req, res) => {
+    const { params } = req.body;
+    const { strategies } = req.body;
+
+    try {
+        const results = await population_simulation(strategies, params);
+        res.json({ results });
+    } catch (error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        console.error('Error name:', error.name);
+        res.status(500).json({ error: 'Error while running simulation' });
+    }
+});
 
 // Start server
 app.listen(port, () => {

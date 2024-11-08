@@ -40,6 +40,13 @@ function simulate(strategies, simulationParameters) {
     simulation_analysis(rewards);
 }
 
+// Takes a list of strategies (as string names of the strategies)
+// And information about the population simulation and runs randomized
+// simulations between strategies within the population
+function population_simulation(strategies, simulationParameters) {
+    return 100;
+}
+
 // 0 is cooperation, 1 is dissent
 // returns a 2 element array with the sentences for players A and B
 function sentencing(action_A, Action_B, reward_matrix) {
@@ -83,4 +90,5 @@ simulate([strategies.aggressive, strategies.tit_for_tat], params);
 
 module.exports = {
     simulate,
+    population_simulation,
 };
