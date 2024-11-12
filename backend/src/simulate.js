@@ -68,6 +68,33 @@ function distribute_strategies(num_strategies, population_size) {
         return result;
 }
 
+function generate_simulation_pairs(strategy_populations, total_population) {
+    let new_populations = [...strategy_populations];
+    const num_strategies = strategy_populations.length;
+    const num_pairs = Math.floor(total_population / 2);
+
+    let result_pairs = [];
+    
+    for (let i = 0; i < num_pairs; i++) {
+        let strategy_1;
+        do {
+            strategy_1 = Math.floor(Math.random() * (num_strategies));
+        } while (new_populations[strategy_1] === 0);
+
+        let strategy_2;
+        do {
+            strategy_2 = Math.floor(Math.random() * (num_strategies));
+        } while (new_populations[strategy_2] === 0 || (new_populations[strategy_2] === 1 && strategy_1 === strategy_2));
+
+        new_populations[strategy_1]--;
+        new_populations[strategy_2]--;
+
+        result_pairs.push([strategy_1, strategy_2]);
+    }
+
+    return [result_pairs, new_populations];
+}
+
 // Takes a list of strategies (as string names of the strategies)
 // And information about the population simulation and runs randomized
 // simulations between strategies within the population
@@ -82,13 +109,16 @@ function population_simulation(strategies, simulationParameters) {
       }
 
     const rounds = simulationParameters.hasOwnProperty('rounds') ? simulationParameters.rounds : 25;
-    const population_size = simulationParameters.hasOwnProperty('population_size') ? simulationParameters.size : 100;
+    const population_size = simulationParameters.hasOwnProperty('population_size') ? simulationParameters.size : 101;
     const reward_matrix = simulationParameters.hasOwnProperty('reward_matrix') ? simulationParameters.teams : default_reward_matrix;
     const update_interval = simulationParameters.hasOwnProperty('update_interval') ? simulationParameters.teams : 10;
 
     const strategy_populations = distribute_strategies(num_strategies, population_size);
 
-    
+    let [result_pairs, new_populations] = generate_simulation_pairs(strategy_populations, population_size);
+
+    console.log(result_pairs);
+    console.log(new_populations);
 
     return strategyFunctions[0]("test");
 }
