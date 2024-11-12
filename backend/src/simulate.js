@@ -49,6 +49,10 @@ function getStrategyByName(name) {
     }
 }
 
+// Distributes strategies over the population, assigning all strategies
+// floor(population_size / num_strategies), and randomly assinging the 
+// remaining population_size % num_strategies, such that no strategy has
+// more than floor(population_size / num_strategies) + 1 to begin with
 function distribute_strategies(num_strategies, population_size) {
         const result = new Array(num_strategies).fill(Math.floor(population_size / num_strategies));
     
@@ -68,6 +72,10 @@ function distribute_strategies(num_strategies, population_size) {
         return result;
 }
 
+// Pairs up strategies in the population randomly to compete in the prisoners dilemma
+// Returns a list of pairs to compete as well as an array indicating the position of the 
+// Strategy not competing that round if there is one (only happens with odd populations
+// as you cant evenly break it into pairs)
 function generate_simulation_pairs(strategy_populations, total_population) {
     let new_populations = [...strategy_populations];
     const num_strategies = strategy_populations.length;
