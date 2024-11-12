@@ -37,6 +37,9 @@ function simulate(strategies, simulationParameters) {
         console.log("Player B:", history.playerB);
     }
 
+    console.log("Player A strategy: ", strategies[0].name);
+    console.log("Player B strategy: ", strategies[1].name);
+
     simulation_analysis(rewards);
 }
 
@@ -128,6 +131,8 @@ function population_simulation(strategies, simulationParameters) {
     console.log(result_pairs);
     console.log(new_populations);
 
+    simulate([strategyFunctions[result_pairs[0][0]],strategyFunctions[result_pairs[0][1]]], simulationParameters);
+
     return strategyFunctions[0]("test");
 }
 
@@ -136,7 +141,7 @@ function population_simulation(strategies, simulationParameters) {
 function sentencing(action_A, Action_B, reward_matrix) {
     // If both actions are the same, it is either cooperation or dissent
     if (action_A == Action_B) {
-        return action_A == 0 ? reward_matrix.cooperating : reward_matrix.betrayal
+        return action_A == 0 ? reward_matrix.cooperation : reward_matrix.dissent
     }
     // betrayal
     return action_A == 0 ? reward_matrix.betrayal.slice().reverse() : reward_matrix.betrayal
@@ -163,18 +168,18 @@ function simulation_analysis(rewards) {
 
 // Example 1v1 simulation
 // 
-// const params = {
-//     rounds: 10,
-//     reward_matrix: {
-//         cooperating: [1, 1],
-//         betrayal: [0, 3],
-//         dissenting: [2, 2],
-//     },
-// };
+const params = {
+    rounds: 10,
+    reward_matrix: {
+        cooperation: [1, 1],
+        betrayal: [0, 3],
+        dissent: [2, 2],
+    },
+};
 
 // simulate([strategies.aggressive, strategies.tit_for_tat], params);
 
-population_simulation(["passive", "aggressive", "random"], 101)
+population_simulation(["passive", "aggressive", "random"], params)
 
 module.exports = {
     simulate,
