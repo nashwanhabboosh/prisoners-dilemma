@@ -49,11 +49,48 @@ function getStrategyByName(name) {
     }
 }
 
+function distribute_strategies(num_strategies, population_size) {
+        const result = new Array(num_strategies).fill(Math.floor(population_size / num_strategies));
+    
+        const remainder = population_size % num_strategies;
+
+        let i = 0;
+        while (true) {
+            if (i == remainder) break;
+
+            const randomIndex = Math.floor(Math.random() * num_strategies);
+            if (result[randomIndex] == Math.floor(population_size / num_strategies)) {
+                result[randomIndex]++;
+                i++;
+            }
+        }
+        
+        return result;
+}
+
 // Takes a list of strategies (as string names of the strategies)
 // And information about the population simulation and runs randomized
 // simulations between strategies within the population
 function population_simulation(strategies, simulationParameters) {
-    return getStrategyByName(strategies[0])("test");
+    const strategyFunctions = strategies.map((strategy) => getStrategyByName(strategy));
+
+    const num_strategies = strategyFunctions.length;
+    const default_reward_matrix = {
+        cooperation: [1, 1],
+        betrayal: [0, 3],
+        dissent: [2, 2]
+      }
+
+    const rounds = simulationParameters.hasOwnProperty('rounds') ? simulationParameters.rounds : 25;
+    const population_size = simulationParameters.hasOwnProperty('population_size') ? simulationParameters.size : 100;
+    const reward_matrix = simulationParameters.hasOwnProperty('reward_matrix') ? simulationParameters.teams : default_reward_matrix;
+    const update_interval = simulationParameters.hasOwnProperty('update_interval') ? simulationParameters.teams : 10;
+
+    const strategy_populations = distribute_strategies(num_strategies, population_size);
+
+    
+
+    return strategyFunctions[0]("test");
 }
 
 // 0 is cooperation, 1 is dissent
@@ -98,6 +135,8 @@ function simulation_analysis(rewards) {
 // };
 
 // simulate([strategies.aggressive, strategies.tit_for_tat], params);
+
+population_simulation(["passive", "aggressive", "random"], 101)
 
 module.exports = {
     simulate,
