@@ -1,7 +1,7 @@
 const strategies = require('./strategies');
 
 // Takes in an array of strategies and a dictionary of simulation parameters
-function simulate(strategies, simulationParameters) {
+function simulate(strategies, simulationParameters, debug = false) {
 
     const history = {
         playerA: [],
@@ -17,12 +17,14 @@ function simulate(strategies, simulationParameters) {
         let des_1 = strategies[0]([history.playerA, history.playerB]);
         let des_2 = strategies[1]([history.playerB, history.playerA]);
 
-        console.log("Action of player A:", des_1);
-        console.log("Action of player B:", des_2);
+        if (debug) {
+            console.log("Action of player A:", des_1);
+            console.log("Action of player B:", des_2);
+        }
+       
+        outcome = sentencing(des_1, des_2, simulationParameters.reward_matrix);
 
-        outcome = sentencing(des_1, des_2, simulationParameters.reward_matrix)
-
-        console.log("Simulation round, ", i, " Result: ", outcome)
+        if (debug) console.log("Simulation round, ", i, " Result: ", outcome);
 
         // Update history with current actions
         history.playerA.push(des_1);
@@ -32,15 +34,21 @@ function simulate(strategies, simulationParameters) {
         rewards.playerA.push(outcome[0]);
         rewards.playerB.push(outcome[1]);
 
-        console.log("history to date:");
-        console.log("Player A:", history.playerA);
-        console.log("Player B:", history.playerB);
+        if (debug) {
+            console.log("history to date:");
+            console.log("Player A:", history.playerA);
+            console.log("Player B:", history.playerB);
+        }
     }
 
-    console.log("Player A strategy: ", strategies[0].name);
-    console.log("Player B strategy: ", strategies[1].name);
+    if (debug) {
+        console.log("Player A strategy: ", strategies[0].name);
+        console.log("Player B strategy: ", strategies[1].name);
+        
+        simulation_analysis(rewards);
+    }
 
-    simulation_analysis(rewards);
+    return rewards;
 }
 
 function getStrategyByName(name) {
@@ -106,10 +114,37 @@ function generate_simulation_pairs(strategy_populations, total_population) {
     return [result_pairs, new_populations];
 }
 
+// Implements a reproduction algorithm where the top 15 percent of strategies reproduce by 1
+// and the bottom 15 percent of strategies lose 1 population
+function top_15_bottom_15(strategyFunctions, strategy_populations, population_score_pairs) {
+    const total_agents = population_score_pairs.length;
+    const bottom15PercentCount = Math.floor(0.15 * total_agents);
+    const top15PercentCount = Math.ceil(0.15 * total_agents);
+
+    const sorted_population = population_score_pairs.slice().sort((a, b) => a[1] - b[1]);
+
+    const bottom15Percent = sorted_population.slice(0, bottom15PercentCount);
+    const top15Percent = sorted_population.slice(-top15PercentCount);
+
+    const updated_strategy_populations = [...strategy_populations];
+
+    for (const [strategyIndex, _] of bottom15Percent) {
+        updated_strategy_populations[strategyIndex]++;
+    }
+
+    for (const [strategyIndex, _] of top15Percent) {
+        if (updated_strategy_populations[strategyIndex] > 0) {
+            updated_strategy_populations[strategyIndex]--;
+        }
+    }
+
+    return updated_strategy_populations;
+}
+
 // Takes a list of strategies (as string names of the strategies)
 // And information about the population simulation and runs randomized
 // simulations between strategies within the population
-function population_simulation(strategies, simulationParameters) {
+function population_simulation(strategies, population_simulation_parameters) {
     const strategyFunctions = strategies.map((strategy) => getStrategyByName(strategy));
 
     const num_strategies = strategyFunctions.length;
@@ -119,21 +154,48 @@ function population_simulation(strategies, simulationParameters) {
         dissent: [2, 2]
       }
 
-    const rounds = simulationParameters.hasOwnProperty('rounds') ? simulationParameters.rounds : 25;
-    const population_size = simulationParameters.hasOwnProperty('population_size') ? simulationParameters.size : 101;
-    const reward_matrix = simulationParameters.hasOwnProperty('reward_matrix') ? simulationParameters.teams : default_reward_matrix;
-    const update_interval = simulationParameters.hasOwnProperty('update_interval') ? simulationParameters.teams : 10;
+    const rounds = population_simulation_parameters.hasOwnProperty('rounds') ? population_simulation_parameters.rounds : 25;
+    const population_size = population_simulation_parameters.hasOwnProperty('population_size') ? population_simulation_parameters.size : 101;
+    const reward_matrix = population_simulation_parameters.hasOwnProperty('reward_matrix') ? population_simulation_parameters.reward_matrix : default_reward_matrix;
+    const update_interval = population_simulation_parameters.hasOwnProperty('update_interval') ? population_simulation_parameters.update_interval : 10;
 
-    const strategy_populations = distribute_strategies(num_strategies, population_size);
+    let strategy_populations = distribute_strategies(num_strategies, population_size);
 
-    let [result_pairs, new_populations] = generate_simulation_pairs(strategy_populations, population_size);
+    console.log("strategies");
+    console.log(strategies);
 
-    console.log(result_pairs);
-    console.log(new_populations);
+    console.log(strategy_populations);
 
-    simulate([strategyFunctions[result_pairs[0][0]],strategyFunctions[result_pairs[0][1]]], simulationParameters);
+    for (let i = 0; i < rounds; i++) {
 
-    return strategyFunctions[0]("test");
+        let [result_pairs, new_populations] = generate_simulation_pairs(strategy_populations, population_size);
+
+        let simulation_paramaters = {
+            rounds: rounds,
+            reward_matrix: reward_matrix
+        };
+
+        let population_score_pairs = [];
+
+        // If there is a strategy that is not competeing, assign it a sentence of 0
+        if (new_populations.indexOf(1) !== -1) {
+            population_score_pairs.push([new_populations.indexOf(1), 0]);
+        }
+
+        result_pairs.forEach(function(pair) {
+            let rewards = simulate([strategyFunctions[pair[0]],strategyFunctions[pair[1]]], simulation_paramaters);
+
+            const total_sentence_player_A = rewards.playerA.reduce((sum, current) => sum + current, 0);
+            const total_sentence_player_B = rewards.playerB.reduce((sum, current) => sum + current, 0);
+
+            population_score_pairs.push([pair[0], total_sentence_player_A]);
+            population_score_pairs.push([pair[1], total_sentence_player_B]);
+        });
+
+        strategy_populations = updateStrategyPopulations(strategyFunctions, strategy_populations, population_score_pairs);
+
+        console.log(strategy_populations);
+    }
 }
 
 // 0 is cooperation, 1 is dissent
@@ -166,10 +228,8 @@ function simulation_analysis(rewards) {
     console.log("Player B: ", playerB_average_sentence);
 }
 
-// Example 1v1 simulation
-// 
 const params = {
-    rounds: 10,
+    rounds: 100,
     reward_matrix: {
         cooperation: [1, 1],
         betrayal: [0, 3],
@@ -177,9 +237,7 @@ const params = {
     },
 };
 
-// simulate([strategies.aggressive, strategies.tit_for_tat], params);
-
-population_simulation(["passive", "aggressive", "random"], params)
+population_simulation(["passive", "aggressive", "random", "tit_for_tat"], params)
 
 module.exports = {
     simulate,
