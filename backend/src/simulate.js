@@ -141,6 +141,16 @@ function top_15_bottom_15(strategyFunctions, strategy_populations, population_sc
     return updated_strategy_populations;
 }
 
+function check_extinct (strategy_populations, extinct_strategies) {
+    let newly_extinct = [];
+    for (let i = 0; i < strategy_populations.length; i++) {
+        if (strategy_populations[i] === 0 && extinct_strategies[i] !== 1) {
+            newly_extinct.push(i);
+        }
+    }
+    return newly_extinct;
+}
+
 // Takes a list of strategies (as string names of the strategies)
 // And information about the population simulation and runs randomized
 // simulations between strategies within the population
@@ -160,11 +170,10 @@ function population_simulation(strategies, population_simulation_parameters) {
     const update_interval = population_simulation_parameters.hasOwnProperty('update_interval') ? population_simulation_parameters.update_interval : 10;
 
     let strategy_populations = distribute_strategies(num_strategies, population_size);
+    let extinct_strategies = new Array(num_strategies).fill(0);
 
-    console.log("strategies");
-    console.log(strategies);
-
-    console.log(strategy_populations);
+    console.log("Strategies: ", strategies);
+    console.log("Initial populations", strategy_populations);
 
     for (let i = 0; i < rounds; i++) {
 
@@ -192,9 +201,22 @@ function population_simulation(strategies, population_simulation_parameters) {
             population_score_pairs.push([pair[1], total_sentence_player_B]);
         });
 
-        strategy_populations = updateStrategyPopulations(strategyFunctions, strategy_populations, population_score_pairs);
+        strategy_populations = top_15_bottom_15(strategyFunctions, strategy_populations, population_score_pairs);
 
-        console.log(strategy_populations);
+        let newly_extinct = check_extinct(strategy_populations, extinct_strategies);
+
+        if (newly_extinct.length !== 0) {
+            console.log("Round ", i + 1 );
+            for (const element of newly_extinct) {
+                extinct_strategies[element] = 1;
+                console.log("Strategy", strategies[element], "has gone extinct");
+            }
+        }
+
+        if (i % update_interval === 9) {
+            console.log("Round ", i + 1 );
+            console.log("Strategy populations:", strategy_populations);
+        }
     }
 }
 
