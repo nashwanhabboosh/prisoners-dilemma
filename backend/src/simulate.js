@@ -1,4 +1,5 @@
 const strategies = require('./strategies');
+const adjustment_algorithms = require('./populations');
 
 // Takes in an array of strategies and a dictionary of simulation parameters
 function simulate(strategies, simulationParameters, debug = false) {
@@ -55,7 +56,16 @@ function getStrategyByName(name) {
     if (strategies[name]) {
         return strategies[name];
     } else {
-        console.error(`Strategy ${funcName} not found.`);
+        console.error(`Strategy ${name} not found.`);
+        return null;
+    }
+}
+
+function getReproductionAlgoByName(name) {
+    if (adjustment_algorithms[name]) {
+        return adjustment_algorithms[name];
+    } else {
+        console.error(`Population adjustment algorithm ${name} not found.`);
         return null;
     }
 }
@@ -114,33 +124,6 @@ function generate_simulation_pairs(strategy_populations, total_population) {
     return [result_pairs, new_populations];
 }
 
-// Implements a reproduction algorithm where the top 15 percent of strategies reproduce by 1
-// and the bottom 15 percent of strategies lose 1 population
-function top_15_bottom_15(strategyFunctions, strategy_populations, population_score_pairs) {
-    const total_agents = population_score_pairs.length;
-    const bottom15PercentCount = Math.floor(0.15 * total_agents);
-    const top15PercentCount = Math.ceil(0.15 * total_agents);
-
-    const sorted_population = population_score_pairs.slice().sort((a, b) => a[1] - b[1]);
-
-    const bottom15Percent = sorted_population.slice(0, bottom15PercentCount);
-    const top15Percent = sorted_population.slice(-top15PercentCount);
-
-    const updated_strategy_populations = [...strategy_populations];
-
-    for (const [strategyIndex, _] of bottom15Percent) {
-        updated_strategy_populations[strategyIndex]++;
-    }
-
-    for (const [strategyIndex, _] of top15Percent) {
-        if (updated_strategy_populations[strategyIndex] > 0) {
-            updated_strategy_populations[strategyIndex]--;
-        }
-    }
-
-    return updated_strategy_populations;
-}
-
 function check_extinct (strategy_populations, extinct_strategies) {
     let newly_extinct = [];
     for (let i = 0; i < strategy_populations.length; i++) {
@@ -168,6 +151,8 @@ function population_simulation(strategies, population_simulation_parameters) {
     const population_size = population_simulation_parameters.hasOwnProperty('population_size') ? population_simulation_parameters.size : 101;
     const reward_matrix = population_simulation_parameters.hasOwnProperty('reward_matrix') ? population_simulation_parameters.reward_matrix : default_reward_matrix;
     const update_interval = population_simulation_parameters.hasOwnProperty('update_interval') ? population_simulation_parameters.update_interval : 10;
+    const population_adjustment_algorithm = population_simulation_parameters.hasOwnProperty('population_adjuster') ? 
+        getReproductionAlgoByName(population_simulation_parameters.population_adjuster) : adjustment_algorithms.proportional_adjustment;
 
     let strategy_populations = distribute_strategies(num_strategies, population_size);
     let extinct_strategies = new Array(num_strategies).fill(0);
@@ -201,7 +186,7 @@ function population_simulation(strategies, population_simulation_parameters) {
             population_score_pairs.push([pair[1], total_sentence_player_B]);
         });
 
-        strategy_populations = top_15_bottom_15(strategyFunctions, strategy_populations, population_score_pairs);
+        strategy_populations = population_adjustment_algorithm(strategy_populations, population_score_pairs);
 
         let newly_extinct = check_extinct(strategy_populations, extinct_strategies);
 
@@ -257,6 +242,7 @@ const params = {
         betrayal: [0, 3],
         dissent: [2, 2],
     },
+    population_adjuster: "proportional_adjustment",
 };
 
 population_simulation(["passive", "aggressive", "random", "tit_for_tat"], params)
