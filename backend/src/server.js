@@ -1,50 +1,48 @@
 const express = require('express');
-const { simulate, population_simulation } = require('./simulate');
+const { population_simulation } = require('./simulate');
 const cors = require('cors');
-const { passive , aggressive} = require('./strategies');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
 const port = 5000;
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: 'http://localhost:3000',
+        methods: ['GET', 'POST'],
+    },
+});
 
 app.use(cors({
     origin: 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  }));
+}));
 
 app.use(express.json());
 
-const createRouteHandler = (strategyFunction) => {
-    return (req, res) => {
-        const { history } = req.body;
+io.on('connection', (socket) => {
+    console.log('A client connected:', socket.id);
 
+    socket.on('start_simulation', async ({ strategies, params }) => {
         try {
-            const decision = strategyFunction(history);
-            res.json({ decision });
+            const handleUpdate = (update) => {
+                socket.emit('simulation_update', update);
+            };
+
+            await population_simulation(strategies, params, handleUpdate);
+            socket.emit('simulation_complete', { message: 'Simulation completed successfully' });
         } catch (error) {
-            console.error(`Error in ${strategyFunction.name} strategy:`, error);
-            res.status(500).json({ error: 'Error processing request' });
+            console.error('Error running simulation:', error);
+            socket.emit('simulation_error', { error: 'Simulation failed to start' });
         }
-    };
-};
+    });
 
-app.post('/api/passive', createRouteHandler(passive));
-
-app.post('/api/simulate', async (req, res) => {
-    const { params } = req.body;
-    const { strategies } = req.body;
-
-    try {
-        const results = await population_simulation(strategies, params);
-        res.json({ results });
-    } catch (error) {
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-        console.error('Error name:', error.name);
-        res.status(500).json({ error: 'Error while running simulation' });
-    }
+    socket.on('disconnect', () => {
+        console.log('A client disconnected:', socket.id);
+    });
 });
 
-// Start server
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });

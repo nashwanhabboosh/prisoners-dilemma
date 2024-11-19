@@ -137,47 +137,45 @@ function check_extinct (strategy_populations, extinct_strategies) {
 // Takes a list of strategies (as string names of the strategies)
 // And information about the population simulation and runs randomized
 // simulations between strategies within the population
-function population_simulation(strategies, population_simulation_parameters) {
+function population_simulation(strategies, population_simulation_parameters, sendUpdate) {
     const strategyFunctions = strategies.map((strategy) => getStrategyByName(strategy));
 
     const num_strategies = strategyFunctions.length;
     const default_reward_matrix = {
         cooperation: [1, 1],
         betrayal: [0, 3],
-        dissent: [2, 2]
-      }
+        dissent: [2, 2],
+    };
 
     const rounds = population_simulation_parameters.hasOwnProperty('rounds') ? population_simulation_parameters.rounds : 25;
-    const population_size = population_simulation_parameters.hasOwnProperty('population_size') ? population_simulation_parameters.size : 101;
+    const population_size = population_simulation_parameters.hasOwnProperty('population_size') ? population_simulation_parameters.population_size : 101;
     const reward_matrix = population_simulation_parameters.hasOwnProperty('reward_matrix') ? population_simulation_parameters.reward_matrix : default_reward_matrix;
     const update_interval = population_simulation_parameters.hasOwnProperty('update_interval') ? population_simulation_parameters.update_interval : 10;
-    const population_adjustment_algorithm = population_simulation_parameters.hasOwnProperty('population_adjuster') ? 
-        getReproductionAlgoByName(population_simulation_parameters.population_adjuster) : adjustment_algorithms.proportional_adjustment;
+    const population_adjustment_algorithm = population_simulation_parameters.hasOwnProperty('population_adjuster')
+        ? getReproductionAlgoByName(population_simulation_parameters.population_adjuster)
+        : adjustment_algorithms.proportional_adjustment;
 
     let strategy_populations = distribute_strategies(num_strategies, population_size);
     let extinct_strategies = new Array(num_strategies).fill(0);
 
-    console.log("Strategies: ", strategies);
-    console.log("Initial populations", strategy_populations);
+    sendUpdate({ type: 'initial_population', strategy_populations });
 
     for (let i = 0; i < rounds; i++) {
-
         let [result_pairs, new_populations] = generate_simulation_pairs(strategy_populations, population_size);
 
-        let simulation_paramaters = {
+        let simulation_parameters = {
             rounds: rounds,
-            reward_matrix: reward_matrix
+            reward_matrix: reward_matrix,
         };
 
         let population_score_pairs = [];
 
-        // If there is a strategy that is not competeing, assign it a sentence of 0
         if (new_populations.indexOf(1) !== -1) {
             population_score_pairs.push([new_populations.indexOf(1), 0]);
         }
 
-        result_pairs.forEach(function(pair) {
-            let rewards = simulate([strategyFunctions[pair[0]],strategyFunctions[pair[1]]], simulation_paramaters);
+        result_pairs.forEach(function (pair) {
+            let rewards = simulate([strategyFunctions[pair[0]], strategyFunctions[pair[1]]], simulation_parameters);
 
             const total_sentence_player_A = rewards.playerA.reduce((sum, current) => sum + current, 0);
             const total_sentence_player_B = rewards.playerB.reduce((sum, current) => sum + current, 0);
@@ -191,18 +189,17 @@ function population_simulation(strategies, population_simulation_parameters) {
         let newly_extinct = check_extinct(strategy_populations, extinct_strategies);
 
         if (newly_extinct.length !== 0) {
-            console.log("Round ", i + 1 );
-            for (const element of newly_extinct) {
+            newly_extinct.forEach((element) => {
                 extinct_strategies[element] = 1;
-                console.log("Strategy", strategies[element], "has gone extinct");
-            }
+                sendUpdate({ type: 'extinction', strategy: strategies[element] });
+            });
         }
 
-        if (i % update_interval === 9) {
-            console.log("Round ", i + 1 );
-            console.log("Strategy populations:", strategy_populations);
+        if (i % update_interval === update_interval - 1) {
+            sendUpdate({ type: 'update', round: i + 1, strategy_populations });
         }
     }
+    sendUpdate({ type: 'final_population', strategy_populations });
 }
 
 // 0 is cooperation, 1 is dissent
@@ -234,18 +231,6 @@ function simulation_analysis(rewards) {
     console.log("Player A: ", playerA_average_sentence);
     console.log("Player B: ", playerB_average_sentence);
 }
-
-const params = {
-    rounds: 100,
-    reward_matrix: {
-        cooperation: [1, 1],
-        betrayal: [0, 3],
-        dissent: [2, 2],
-    },
-    population_adjuster: "proportional_adjustment",
-};
-
-population_simulation(["passive", "aggressive", "random", "tit_for_tat"], params)
 
 module.exports = {
     simulate,
