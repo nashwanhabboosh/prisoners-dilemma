@@ -211,6 +211,10 @@ function App() {
                             <option value="random">Random</option>
                             <option value="tit_for_tat">Tit For Tat</option>
                             <option value="suspicious_tit_for_tat">Suspicious Tit For Tat</option>
+                            <option value="gradual_tit_for_tat">Gradual Tit For Tat</option>
+                            <option value="imperfect_tit_for_tat">Imperfect Tit For Tat</option>
+                            <option value="tit_for_two_tats">Tit For Two Tats</option>
+                            <option value="two_tits_for_tat">Two Tits For Tat</option>
                         </select>
                         <button type="button" onClick={handleAddStrategy}>
                             Add Strategy
