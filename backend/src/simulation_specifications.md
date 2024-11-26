@@ -32,3 +32,8 @@ This document outlines the possible simulation parameters for running population
 - **Type**: Integer
 - **Description**: The number of the population simulation in between updates on the total simulation
 - **Example (Default)**: `update_interval: 10`
+
+## 5. **Reproduction Algorithm**
+- **Type**: String
+- **Description**: The population adjustment algorithm used for the simulation
+- **Example (Default)**: `population_adjuster: "proportional_adjustment"`
