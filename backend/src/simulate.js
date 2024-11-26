@@ -148,7 +148,7 @@ function population_simulation(strategies, population_simulation_parameters, sen
     };
 
     const rounds = population_simulation_parameters.hasOwnProperty('rounds') ? population_simulation_parameters.rounds : 25;
-    const population_size = population_simulation_parameters.hasOwnProperty('population_size') ? population_simulation_parameters.population_size : 101;
+    const population_size = population_simulation_parameters.hasOwnProperty('population_size') ? population_simulation_parameters.population_size : 100;
     const reward_matrix = population_simulation_parameters.hasOwnProperty('reward_matrix') ? population_simulation_parameters.reward_matrix : default_reward_matrix;
     const update_interval = population_simulation_parameters.hasOwnProperty('update_interval') ? population_simulation_parameters.update_interval : 10;
     const population_adjustment_algorithm = population_simulation_parameters.hasOwnProperty('population_adjuster')

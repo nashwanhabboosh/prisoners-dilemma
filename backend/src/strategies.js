@@ -49,4 +49,5 @@ module.exports = {
     aggressive,
     random,
     tit_for_tat,
+    suspicious_tit_for_tat,
 };
